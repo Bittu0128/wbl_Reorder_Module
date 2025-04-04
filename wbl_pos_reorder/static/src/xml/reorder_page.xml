@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- # Author      : Weblytic Labs Pvt. Ltd. (<https://store.weblyticlabs.com/>) -->
+<!-- # Copyright(c): 2023-Present Weblytic Labs Pvt. Ltd. -->
+<templates id="wbl_reorder_module.ReorderPage" xml:space="preserve">
+    <t t-name="wbl_reorder_module.ReorderPage">
+        <div class="controls d-grid d-sm-flex align-items-center justify-content-between gap-2 gap-sm-3 p-2 bg-300">
+                <div class="buttons d-flex gap-2">
+                     <button class="discard btn btn-lg btn-light text-nowrap"
+                             t-on-click="() => this.closeTicketScreen()">
+                         <i class="oi oi-chevron-left"/>
+                         <span class="ms-2">Back</span>
+                     </button>
+                </div>
+            <SearchBar
+                    config="getSearchBarConfig()"
+                    placeholder.translate="Search Orders..."
+                    onSearch.bind="onSearch"
+                    onFilterSelected.bind="onFilterSelected"/>
+
+            <div class="item d-flex align-items-center justify-content-end">
+                            <span class="page me-2"><t t-esc="getPageNumber()"/></span>
+                <div class="page-controls d-flex align-items-center gap-1">
+                        <button class="previous btn btn-light btn-lg" t-on-click="() => this.onPrevPage()">
+                            <i class="fa fa-fw fa-caret-left" role="img" aria-label="Previous Order List"
+                               title="Previous Order List"/>
+                        </button>
+                    <button class="next btn btn-light btn-lg" t-on-click="() => this.onNextPage()">
+                            <i class="fa fa-fw fa-caret-right" role="img" aria-label="Next Order List"
+                               title="Next Order List"/>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        <div class="orders overflow-y-auto flex-grow-1">
+            <t t-set="_filteredOrderList" t-value="getFilteredOrderList()"/>
+            <t>
+                <div class="header-row d-flex text-bg-700 fw-bolder">
+                    <div class="col wide p-2">Date</div>
+                    <div class="col wide p-2">Receipt Number</div>
+                    <div class="col wide p-2">Order number</div>
+                    <div class="col p-2">Customer</div>
+                    <div class="col wide p-2" t-if="showCardholderName()">Cardholder Name</div>
+                    <div class="col p-2">Cashier</div>
+                    <div class="col end p-2">Total</div>
+                    <div class="col narrow p-2">Status</div>
+                    <div class="col very-narrow p-2" name="delete"></div>
+                    <div class="col narrow p-2">View</div>
+                    <div class="col narrow p-2">Reorder</div>
+                </div>
+
+                <t t-foreach="_filteredOrderList" t-as="order" t-key="order.uuid">
+                    <div class="order-row"
+                         t-att-class="{ 'highlight bg-primary text-white': isHighlighted(order) }"
+                    >
+                        <div class="col wide p-2 ">
+                            <div><t t-esc="getDate(order)"></t></div>
+                        </div>
+                        <div class="col wide p-2">
+                            <div><t t-esc="order.pos_reference"></t></div>
+                        </div>
+                        <div class="col wide p-2">
+                                        <div><t t-esc="order.tracking_number"></t></div>
+                                    </div>
+                        <div class="col p-2">
+                            <div><t t-esc="order.partner_id?.name"></t></div>
+                                    </div>
+                        <div t-if="showCardholderName()" class="col p-2">
+                                        <div><t t-esc="getCardholderName(order)"></t></div>
+                                    </div>
+                        <div class="col p-2">
+                                        <t t-esc="getCashier(order)"></t>
+                                    </div>
+                        <div class="col end p-2">
+                                        <div><t t-esc="getTotal(order)"></t></div>
+                                    </div>
+                        <div class="col narrow p-2">
+                                        <div><t t-esc="getStatus(order)"></t></div>
+                        </div>
+                        <div t-if="!shouldHideDeleteButton(order)" class="col very-narrow delete-button p-2"
+                             name="delete" t-on-click.stop="() => this.pos.onDeleteOrder(order)">
+                                        <i class="fa fa-trash" aria-hidden="true"/>
+                                    </div>
+                        <div t-else="" class="col very-narrow p-2"></div>
+
+                        <div class="col narrow p-2">
+                            <div t-on-click="() => this.reorderProductPage(order)">
+                                <i class="fa fa-eye" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                        <div class="col narrow p-2 ">
+                            <div t-on-click="() => this.allProductReorder(order)"
+                            >
+                                <i class="fa fa-refresh" aria-hidden="true"></i>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+
+        </div>
+    </t>
+
+    <t t-name="wbl_reorder_module.ReorderAllProduct">
+        <Dialog title.translate="Reorder Products">
+            <div class="section">
+                <table class="custom-table table">
+        <thead>
+            <tr>
+                <th class="text-start">Product</th>
+                <th class="text-start">Quantity</th>
+                <th class="text-start">Payable Tax</th>
+                <th class="text-start">Paid Amount</th>
+                <th class="text-start">Reorder Product</th>
+            </tr>
+        </thead>
+        <t t-set="_filteredOrderList" t-value="props.order.lines"/>
+        <tbody>
+            <t t-foreach="_filteredOrderList" t-as="order" t-key="order.id">
+                <tr>
+                    <td class="d-flex justify-content-start align-items-center w-70 text-start">
+                        <div>
+                            <table class="table">
+                                <tr class="d-flex align-items-center">
+                                    <td rowspan="2" class="d-flex align-items-center justify-content-center" style="padding-right: 20px;">
+                                        <div>
+                                            <img class="w-70 h-70 bg-100"
+                                                     t-att-src="`/web/image?model=product.product&#38;field=image_128&#38;id=${order._raw.product_id}&#38;unique=${order.product_id.write_date}`"
+                                                     t-att-alt="order.name"/>
+                                            </div>
+                                        </td>
+                                    <td class="d-flex flex-column align-items-start" style="padding-left: 20px;">
+                                        <span class="d-block" t-esc="order.full_product_name"></span>
+                                        <span class="d-block" t-esc="'Price: ' + '$' + order.price_unit.toFixed(2)"></span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </td>
+                    <td class="text-start text-center align-middle"><t t-esc="order.qty"/></td>
+                    <td class="text-start text-center align-middle"><t t-esc="'$ ' + (order.price_subtotal_incl - order.price_subtotal).toFixed(2)"/></td>
+                    <td class="text-start text-center align-middle"><t t-esc="'$ ' + order.price_subtotal_incl.toFixed(2)"/></td>
+                    <td class="text-center align-middle">
+                        <button class="btn btn-primary" t-on-click="() => this.ReorderParticularProduct(order)">Reorder</button>
+                    </td>
+                </tr>
+            </t>
+        </tbody>
+    </table>
+            </div>
+            <t t-set-slot="footer" >
+                <button class="btn btn-primary btn-lg me-2" t-on-click="props.close">Close</button>
+                <button class="btn btn-primary btn-lg me-2" t-on-click="() => this.allProductReorder(props.order)">Reorder</button>
+            </t>
+        </Dialog>
+    </t>
+</templates>

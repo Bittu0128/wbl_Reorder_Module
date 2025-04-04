@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- # Author      : Weblytic Labs Pvt. Ltd. (<https://store.weblyticlabs.com/>) -->
+<!-- # Copyright(c): 2023-Present Weblytic Labs Pvt. Ltd. -->
+<templates id="template" xml:space="preserve">
+    <t t-name="reorder_button_template" t-inherit="point_of_sale.PartnerLine" t-inherit-mode="extension">
+        <xpath expr="//td[@class='edit-partner-button-cell align-middle']/Dropdown/t" position="inside">
+            <DropdownItem onSelected="() => props.onClickReorders(props.partner)">
+                <div>
+                    Reorder
+                </div>
+            </DropdownItem>
+        </xpath>
+    </t>
+</templates>
+
+
